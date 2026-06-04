@@ -1,0 +1,25 @@
+{
+  "name": "youtube-trend-research-agent",
+  "version": "0.1.0",
+  "description": "YouTube 트렌드 리서치 멀티 에이전트 CLI (Phase 1 MVP)",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "research": "tsx src/index.ts",
+    "web": "tsx src/server.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "openai": "^4.104.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

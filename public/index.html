@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>YouTube 트렌드 리서치 에이전트</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  </head>
+  <body>
+    <div class="layout">
+      <header class="header">
+        <div>
+          <p class="eyebrow">NextPlatform · Phase 1 MVP</p>
+          <h1>YouTube 트렌드 리서치 에이전트</h1>
+          <p class="subtitle">
+            Search · Video Stats 에이전트 + <strong>OpenAI GPT</strong> 분석
+          </p>
+        </div>
+        <div id="health" class="health" aria-live="polite">연결 확인 중…</div>
+      </header>
+
+      <section class="panel form-panel">
+        <form id="research-form">
+          <label class="field field-wide">
+            <span>분석 키워드</span>
+            <input
+              type="text"
+              name="keyword"
+              placeholder="예: AI 에이전트, ChatGPT"
+              required
+              autocomplete="off"
+            />
+          </label>
+
+          <div class="field-row">
+            <label class="field">
+              <span>기간 (일)</span>
+              <input type="number" name="daysBack" value="7" min="1" max="90" />
+            </label>
+            <label class="field">
+              <span>검색 수 (max)</span>
+              <input type="number" name="maxResults" value="25" min="5" max="50" />
+            </label>
+            <label class="field">
+              <span>지역</span>
+              <input type="text" name="regionCode" value="KR" maxlength="5" />
+            </label>
+            <label class="field">
+              <span>언어</span>
+              <input type="text" name="language" value="ko" maxlength="5" />
+            </label>
+          </div>
+
+          <label class="checkbox">
+            <input type="checkbox" name="skipLlm" />
+            OpenAI 분석 생략 (YouTube 데이터만)
+          </label>
+
+          <button type="submit" id="submit-btn">리서치 실행</button>
+        </form>
+        <p id="status" class="status" role="status"></p>
+      </section>
+
+      <section id="videos-section" class="panel hidden">
+        <h2>📊 급상승 Top 10</h2>
+        <div class="table-wrap">
+          <table id="videos-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>제목</th>
+                <th>채널</th>
+                <th>조회수</th>
+                <th>시간당 조회</th>
+                <th>상태</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="report-section" class="panel hidden">
+        <div class="report-head">
+          <h2>📄 트렌드 리포트</h2>
+          <button type="button" id="copy-md" class="ghost">Markdown 복사</button>
+        </div>
+        <article id="report" class="report markdown-body"></article>
+      </section>
+    </div>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
