@@ -3,12 +3,25 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  attachSession,
+  authPayload,
+  isAdmin,
+  login,
+  logout,
+} from "./auth.js";
 import { runOrchestrator } from "./agents/orchestrator.js";
+import {
+  buildGlobalInsights,
+  getReport,
+  listReports,
+} from "./reportsStore.js";
 import type { ResearchInput } from "./types.js";
 
 const PORT = Number(process.env.PORT ?? 5151);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PUBLIC_DIR = path.join(ROOT, "public");
+const REPORTS_DIR = path.join(ROOT, "reports");
 
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -79,6 +92,15 @@ function parseResearchBody(raw: string): {
   };
 }
 
+function requireAdmin(
+  req: IncomingMessage,
+  res: ServerResponse
+): boolean {
+  if (isAdmin(req)) return true;
+  sendJson(res, 401, { error: "관리자 로그인이 필요합니다." });
+  return false;
+}
+
 async function handleRequest(
   req: IncomingMessage,
   res: ServerResponse
@@ -92,11 +114,78 @@ async function handleRequest(
       youtube: Boolean(process.env.YOUTUBE_API_KEY),
       openai: Boolean(process.env.OPENAI_API_KEY),
       model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
+      adminConfigured: Boolean(process.env.ADMIN_PASSWORD),
     });
     return;
   }
 
+  if (req.method === "GET" && pathname === "/api/auth/me") {
+    sendJson(res, 200, authPayload(req));
+    return;
+  }
+
+  if (req.method === "POST" && pathname === "/api/auth/login") {
+    let body: { email?: string; password?: string };
+    try {
+      body = JSON.parse(await readBody(req)) as { email?: string; password?: string };
+    } catch {
+      sendJson(res, 400, { error: "JSON 파싱 실패" });
+      return;
+    }
+    const result = login(String(body.email ?? ""), String(body.password ?? ""));
+    if (!result.ok) {
+      sendJson(res, 401, { error: result.error });
+      return;
+    }
+    attachSession(res, result.token);
+    sendJson(res, 200, { role: "admin", email: process.env.ADMIN_EMAIL ?? "naebon1@gmail.com" });
+    return;
+  }
+
+  if (req.method === "POST" && pathname === "/api/auth/logout") {
+    logout(req, res);
+    sendJson(res, 200, { role: "reader", email: null });
+    return;
+  }
+
+  if (req.method === "GET" && pathname === "/api/insights") {
+    const reports = await listReports(REPORTS_DIR);
+    sendJson(res, 200, buildGlobalInsights(reports));
+    return;
+  }
+
+  if (req.method === "GET" && pathname === "/api/reports") {
+    const reports = await listReports(REPORTS_DIR);
+    sendJson(
+      res,
+      200,
+      reports.map((r) => ({
+        id: r.id,
+        keyword: r.keyword,
+        generatedAt: r.generatedAt,
+        excerpt: r.excerpt,
+        coverThumbnail: r.coverThumbnail,
+        topVideoCount: r.top10.length,
+        regionCode: r.input.regionCode,
+      }))
+    );
+    return;
+  }
+
+  const reportMatch = pathname.match(/^\/api\/reports\/([^/]+)$/);
+  if (req.method === "GET" && reportMatch) {
+    const report = await getReport(REPORTS_DIR, decodeURIComponent(reportMatch[1]));
+    if (!report) {
+      sendJson(res, 404, { error: "리포트를 찾을 수 없습니다." });
+      return;
+    }
+    sendJson(res, 200, report);
+    return;
+  }
+
   if (req.method === "POST" && pathname === "/api/research") {
+    if (!requireAdmin(req, res)) return;
+
     const raw = await readBody(req);
     const parsed = parseResearchBody(raw);
     if ("error" in parsed) {
@@ -118,13 +207,19 @@ async function handleRequest(
         input: parsed.input,
         skipLlm: parsed.skipLlm,
         writeReports: true,
-        outputDir: path.join(ROOT, "reports"),
+        outputDir: REPORTS_DIR,
       });
+
+      const report = await getReport(
+        REPORTS_DIR,
+        path.basename(output.jsonPath ?? "", ".json")
+      );
 
       sendJson(res, 200, {
         markdown: output.markdown,
         analysis: output.analysis,
         result: output.result,
+        report,
         paths: {
           markdown: output.markdownPath,
           json: output.jsonPath,
@@ -138,8 +233,7 @@ async function handleRequest(
   }
 
   if (req.method === "GET") {
-    const staticPath =
-      pathname === "/" ? "/index.html" : pathname;
+    const staticPath = pathname === "/" ? "/index.html" : pathname;
     const served = await serveStatic(staticPath, res);
     if (served) return;
   }
@@ -158,5 +252,5 @@ const server = createServer((req, res) => {
 });
 
 server.listen(PORT, "127.0.0.1", () => {
-  console.log(`YouTube Trend Agent → http://127.0.0.1:${PORT}`);
+  console.log(`YouTube Trend Magazine → http://127.0.0.1:${PORT}`);
 });

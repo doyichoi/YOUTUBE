@@ -3,92 +3,128 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>YouTube 트렌드 리서치 에이전트</title>
+    <title>Trend Magazine — YouTube 글로벌 리서치</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   </head>
   <body>
-    <div class="layout">
-      <header class="header">
-        <div>
-          <p class="eyebrow">NextPlatform · Phase 1 MVP</p>
-          <h1>YouTube 트렌드 리서치 에이전트</h1>
-          <p class="subtitle">
-            Search · Video Stats 에이전트 + <strong>OpenAI GPT</strong> 분석
-          </p>
-        </div>
-        <div id="health" class="health" aria-live="polite">연결 확인 중…</div>
+    <nav class="nav">
+      <a href="/" class="logo" data-nav="home">Trend<br /><span>Magazine</span></a>
+      <div class="nav-actions">
+        <button type="button" id="btn-bookmarks" class="nav-btn" title="찜한 리포트">
+          ♥ <span id="bookmark-count">0</span>
+        </button>
+        <span id="user-badge" class="user-badge">독자</span>
+        <button type="button" id="btn-login" class="nav-btn primary">관리자 로그인</button>
+        <button type="button" id="btn-logout" class="nav-btn hidden">로그아웃</button>
+      </div>
+    </nav>
+
+    <main id="view-home">
+      <header class="hero">
+        <p class="hero-label">Global YouTube Intelligence</p>
+        <h1>글로벌 유튜브 콘텐츠·채널·토픽 인사이트</h1>
+        <p class="hero-desc">
+          멀티 에이전트가 수집한 트렌드를 핀터레스트형 리서치 매거진으로 읽습니다.
+        </p>
       </header>
 
-      <section class="panel form-panel">
-        <form id="research-form">
-          <label class="field field-wide">
-            <span>분석 키워드</span>
-            <input
-              type="text"
-              name="keyword"
-              placeholder="예: AI 에이전트, ChatGPT"
-              required
-              autocomplete="off"
-            />
+      <section class="insights-bar" id="global-insights" aria-live="polite">
+        <div class="insight-col">
+          <h3>🌐 콘텐츠 펄스</h3>
+          <div id="pulse-stats" class="insight-body">로딩 중…</div>
+        </div>
+        <div class="insight-col">
+          <h3>📺 주목 채널</h3>
+          <div id="channel-insights" class="insight-body">로딩 중…</div>
+        </div>
+        <div class="insight-col">
+          <h3>🔥 급상승 토픽</h3>
+          <div id="topic-insights" class="insight-body">로딩 중…</div>
+        </div>
+      </section>
+
+      <section class="feed-header">
+        <h2>트렌드 리포트</h2>
+        <p>핵심 인사이트를 카드로 모았습니다. 탭하여 전체 리포트를 읽으세요.</p>
+      </section>
+
+      <section id="magazine-feed" class="masonry" aria-label="트렌드 리포트 카드"></section>
+      <p id="feed-empty" class="feed-empty hidden">아직 리포트가 없습니다. 관리자가 리서치를 실행하면 카드가 표시됩니다.</p>
+    </main>
+
+    <main id="view-detail" class="hidden">
+      <button type="button" class="back-link" data-nav="home">← 매거진으로</button>
+      <article id="detail-hero" class="detail-hero"></article>
+      <section class="detail-section">
+        <h2>상위 영상 분석 Top 10</h2>
+        <div id="detail-top10" class="top10-grid"></div>
+      </section>
+      <section class="detail-section">
+        <div id="detail-analysis" class="analysis-cards"></div>
+      </section>
+      <section class="detail-section">
+        <h2>전체 리포트</h2>
+        <article id="detail-markdown" class="markdown-body"></article>
+      </section>
+    </main>
+
+    <section id="admin-panel" class="admin-panel hidden">
+      <h2>관리자 · 새 리서치</h2>
+      <form id="research-form">
+        <label class="field">
+          <span>키워드</span>
+          <input name="keyword" required placeholder="예: AI 에이전트" />
+        </label>
+        <div class="field-row">
+          <label class="field">
+            <span>기간(일)</span>
+            <input type="number" name="daysBack" value="7" min="1" max="90" />
           </label>
-
-          <div class="field-row">
-            <label class="field">
-              <span>기간 (일)</span>
-              <input type="number" name="daysBack" value="7" min="1" max="90" />
-            </label>
-            <label class="field">
-              <span>검색 수 (max)</span>
-              <input type="number" name="maxResults" value="25" min="5" max="50" />
-            </label>
-            <label class="field">
-              <span>지역</span>
-              <input type="text" name="regionCode" value="KR" maxlength="5" />
-            </label>
-            <label class="field">
-              <span>언어</span>
-              <input type="text" name="language" value="ko" maxlength="5" />
-            </label>
-          </div>
-
-          <label class="checkbox">
-            <input type="checkbox" name="skipLlm" />
-            OpenAI 분석 생략 (YouTube 데이터만)
+          <label class="field">
+            <span>검색 수</span>
+            <input type="number" name="maxResults" value="25" min="5" max="50" />
           </label>
+          <label class="field">
+            <span>지역</span>
+            <input name="regionCode" value="KR" maxlength="5" />
+          </label>
+        </div>
+        <label class="checkbox">
+          <input type="checkbox" name="skipLlm" /> OpenAI 분석 생략
+        </label>
+        <button type="submit" id="submit-btn">리서치 실행</button>
+      </form>
+      <p id="admin-status" class="status"></p>
+    </section>
 
-          <button type="submit" id="submit-btn">리서치 실행</button>
+    <div id="login-modal" class="modal hidden" role="dialog" aria-labelledby="login-title">
+      <div class="modal-backdrop" data-close-modal></div>
+      <div class="modal-card">
+        <h2 id="login-title">관리자 로그인</h2>
+        <p class="modal-hint">일반 방문자는 <strong>독자</strong>로 리포트 읽기·찜하기만 가능합니다.</p>
+        <form id="login-form">
+          <label class="field">
+            <span>이메일</span>
+            <input type="email" name="email" required autocomplete="username" />
+          </label>
+          <label class="field">
+            <span>비밀번호</span>
+            <input type="password" name="password" required autocomplete="current-password" />
+          </label>
+          <p id="login-error" class="login-error"></p>
+          <button type="submit" class="primary-btn">로그인</button>
         </form>
-        <p id="status" class="status" role="status"></p>
-      </section>
-
-      <section id="videos-section" class="panel hidden">
-        <h2>📊 급상승 Top 10</h2>
-        <div class="table-wrap">
-          <table id="videos-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>제목</th>
-                <th>채널</th>
-                <th>조회수</th>
-                <th>시간당 조회</th>
-                <th>상태</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </section>
-
-      <section id="report-section" class="panel hidden">
-        <div class="report-head">
-          <h2>📄 트렌드 리포트</h2>
-          <button type="button" id="copy-md" class="ghost">Markdown 복사</button>
-        </div>
-        <article id="report" class="report markdown-body"></article>
-      </section>
+        <button type="button" class="ghost-btn" data-close-modal>닫기</button>
+      </div>
     </div>
+
     <script src="/app.js" type="module"></script>
   </body>
 </html>
